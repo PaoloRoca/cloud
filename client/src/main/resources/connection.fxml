@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+
+<GridPane maxWidth="Infinity" HBox.hgrow="ALWAYS" hgap="5" vgap="5"
+          prefHeight="100.0" prefWidth="300.0"
+          xmlns="http://javafx.com/javafx/10.0.2-internal"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="netty_client.ConnectController">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10" />
+    </padding>
+
+        <TextField fx:id="host" editable="false" focusTraversable="false" text="localhost"
+                   GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <TextField fx:id="port" focusTraversable="false" text="8080"
+                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+        <TextField fx:id="userName" focusTraversable="false" text="Christmas tree"
+                   GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <PasswordField fx:id="password" focusTraversable="false" text="password"
+                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Button fx:id="btnConnect" onAction="#connectToServer" text="Connect"
+                alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <Button fx:id="btnDisconnect" onAction="#disconnectFromServer" text="Disconnect"
+                GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+        <Label fx:id="labelConnect" text=" "
+               GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"/>
+
+</GridPane>

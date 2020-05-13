@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane maxWidth="Infinity" HBox.hgrow="ALWAYS" hgap="5" vgap="5"
+      xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="netty_client.MainController">
+
+    <HBox GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" >
+        <MenuBar maxWidth="Infinity" HBox.hgrow="ALWAYS" >
+            <Menu text="File">
+                <MenuItem onAction="#menuItemFileAction" text="Exit" />
+            </Menu>
+            <Menu text="Connecting">
+                <MenuItem mnemonicParsing="false" text="Connect to server" onAction="#connect" />
+            </Menu>
+        </MenuBar>
+    </HBox>
+
+    <HBox GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2">
+        <Button onAction="#send" text="send file" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <Button onAction="#receive" text="receive file" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    </HBox>
+
+    <HBox GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
+        <fx:include fx:id="count" source="/filesmng.fxml" />
+    </HBox>
+
+</GridPane>

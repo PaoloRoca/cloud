@@ -1,0 +1,34 @@
+Netty довольно часто выбирают для серверного решения, так как сервера должны
+поддерживать работу разных протоколов. Например, облако может
+поддерживать HTTP/S, WebSockets, SSL/TCP сокеты для разного hardware и
+собственного бинарного протокола. Это значит, что для каждого из этих протоколов
+должен быть IO поток (boss group) и потоки обработчики логики (work group).
+Обычно создание нескольких таких обработчиков выглядит так:
+
+//http server
+new ServerBootstrap().group(new EpollEventLoopGroup(1), new EpollEventLoopGroup(workerThreads))
+       .channel(channelClass)
+       .childHandler(getHTTPChannelInitializer(())
+       .bind(80);
+
+//https server
+new ServerBootstrap().group(new EpollEventLoopGroup(1), new EpollEventLoopGroup(workerThreads))
+       .channel(channelClass)
+       .childHandler(getHTTPSChannelInitializer(())
+       .bind(443);
+
+//        int capacity =
+//                1 + //command
+//                2 + //file name length
+//                4 + //name of file
+//                4;  //data
+////        buf.writeByte(1);
+//
+//        ByteBuf temp = Unpooled.copiedBuffer("test.txt", CharsetUtil.UTF_8);
+//        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer(capacity);
+
+//        ctx.writeAndFlush(Unpooled.wrappedBuffer(buf));
+//        ctx.writeAndFlush(Unpooled.copiedBuffer("123 456",CharsetUtil.UTF_8));
+          pipeline.write(Unpooled.copiedBuffer("New msg from Server", CharsetUtil.UTF_8));
+
+

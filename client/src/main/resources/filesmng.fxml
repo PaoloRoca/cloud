@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane stylesheets="style.css"
+          maxWidth="Infinity" HBox.hgrow="ALWAYS" hgap="5" vgap="5"
+          xmlns="http://javafx.com/javafx/10.0.2-internal"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="file_manager.FilesController" >
+
+    <TextField fx:id="clientFiles" editable="false" text="Client" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <TextField fx:id="serverFiles" editable="false" text="Server" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+    <ListView fx:id="filesList" onMouseClicked="#filesListClicked" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+    <ListView fx:id="list" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+    <HBox GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+        <Button maxWidth="Infinity" onAction="#catalog" text="Catalog" HBox.hgrow="ALWAYS" />
+        <Button maxWidth="Infinity" text="Просмотр" HBox.hgrow="ALWAYS" />
+        <Button maxWidth="Infinity" onAction="#copy" text="Copy" HBox.hgrow="ALWAYS" />
+        <Button maxWidth="Infinity" onAction="#move" text="Move" HBox.hgrow="ALWAYS" />
+        <Button maxWidth="Infinity" onAction="#delete" text="Delete" HBox.hgrow="ALWAYS" />
+    </HBox>
+
+</GridPane>
