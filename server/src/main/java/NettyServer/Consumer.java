@@ -5,16 +5,11 @@ import java.nio.file.Path;
 
 public class Consumer {
     private ChannelHandlerContext channel;
-    private Packet packet;
-    private Path pathToDir;
+    private Path userDirectory;
 
-    public Consumer(ChannelHandlerContext ctx, Packet packet) {
+    public Consumer(ChannelHandlerContext ctx, Path dir) {
         this.channel = ctx;
-        this.packet = packet;
-    }
-
-    public Packet getPacket() {
-        return packet;
+        this.userDirectory = dir;
     }
 
     public ChannelHandlerContext getChannel() {

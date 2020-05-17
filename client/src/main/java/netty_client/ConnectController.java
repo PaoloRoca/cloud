@@ -16,18 +16,18 @@ import java.net.InetSocketAddress;
 
 public class ConnectController {
     @FXML private Label labelConnect;
-    @FXML private TextField host;
-    @FXML private TextField port;
-    @FXML private TextField userName;
-    @FXML private TextField password;
+    @FXML private TextField hostTField;
+    @FXML private TextField portTField;
+    @FXML private TextField userNameTField;
+    @FXML private TextField passwordTField;
     @FXML private Button btnConnect;
     @FXML private Button btnDisconnect;
 
     private Client client;
     private MainController mainController;
 
-    private ChannelFuture channelFuture;
     private Channel channel;
+    private ChannelFuture channelFuture;
     private EventLoopGroup group;
 
     //TODO
@@ -37,18 +37,15 @@ public class ConnectController {
         System.out.println("ConnectController.connectToServer");
 
         client = new Client();
-        client.setUserName(userName.getText());
-        client.setPassword(password.getText());
-        client.setHost(host.getText());
-        client.setPort(Integer.parseInt(port.getText().trim()));
 
         try {
-            start();
+            connect();
+            client.setClientParam(hostTField.getText(), Integer.parseInt(portTField.getText().trim()),
+                    userNameTField.getText(), passwordTField.getText());
             labelConnect.setText("Connecting OK");
             btnConnect.setDisable(true);
             btnDisconnect.setDisable(false);
-            //TODO сообщения между контроллерами вместо ссылок
-            mainController.setClient (client);
+            mainController.setClient (client); //TODO
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,11 +68,11 @@ public class ConnectController {
         }
     }
 
-    public void setParent(MainController fileController) {
-        this.mainController = fileController;
+    public void setParent(MainController mainController) {
+        this.mainController = mainController;
     }
 
-    public void start() throws Exception {
+    public void connect() throws Exception {
         group = new NioEventLoopGroup(); //Обработка событий
 
         Bootstrap b = new Bootstrap(); //Инициализация клиента
@@ -92,13 +89,13 @@ public class ConnectController {
 
         channelFuture = b.connect().sync(); //Все установлено, подключаемся к удаленному узлу
         channel = channelFuture.channel();
+        client.setChannel(channel);
     }
 
     public void stop() throws InterruptedException {
         if (channelFuture != null) {
             channelFuture.channel().closeFuture();
         }
-
         group.shutdownGracefully().sync();
     }
 

@@ -1,26 +1,34 @@
 package NettyServer;
 
+import NettyServer.file_controller.ServerFileController;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.util.CharsetUtil;
+import io.netty.util.CharsetUtil;
 
-@ChannelHandler.Sharable
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
-    Consumer consumer;
+    private Consumer consumer;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         //super.channelActive(ctx);
         ctx.fireChannelActive();
 
-        this.consumer = new Consumer(ctx, new ByteFramePacket());
-        //TODO Создание директории пользователя (если новый пользователь)
+        //TODO
+        Path path = Paths.get("server_storage", "1");
+        System.out.println(path);
+        this.consumer = new Consumer(ctx, path);
+        //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
+        byte[] userFiles = ServerFileController.getFilesNameList(ServerFileController.getDirectory("1"));
+        CommandService.sendDirectoryStruct(ctx, userFiles);
 
         System.out.print("ServerInBoundHandler.channelActive ");
         System.out.println("*** Client " + ctx.channel().remoteAddress() + " connected");
+        ctx.writeAndFlush(Unpooled.copiedBuffer("* Server channel send", CharsetUtil.UTF_8));
     }
 
     @Override
@@ -28,14 +36,14 @@ public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
         System.out.println("** ServerInBoundHandler.channelRead");
 
         ByteBuf in = (ByteBuf) msg;
-        //Принцип работы Read
-        try {
-            while (in.isReadable()) {
-                System.out.print(in.readByte() + " ");
-            }
-        } finally {
-            in.release();
-        }
+        //*** Принцип работы Read
+//        try {
+//            while (in.isReadable()) {
+//                System.out.print(in.readByte() + " ");
+//            }
+//        } finally {
+//            in.release(); //Сообщаем, что буфер не нужен.
+//        }
 
 //        //Отладка
 //        while (in.isReadable()) {
@@ -46,9 +54,10 @@ public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
         int a = in.readByte(); //Команда
         int b = in.readByte(); //Длина имени файла
         byte[] name = new byte[b]; //Имя файла
-        for (int i = 0; i < b; i++) {
-            name[i] = in.readByte(); //in.getByte(0); а так можно опять читать сначала
-        }
+        in.readBytes(name);
+//        for (int i = 0; i < b; i++) {
+//            name[i] = in.readByte(); //in.getByte(0); а так можно опять читать сначала
+//        }
         int dataLength = in.readInt();
         byte[] data = new byte[dataLength]; //Длина данных файла
         for (int i = 0; i < dataLength; i++) {
@@ -56,12 +65,13 @@ public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
         }
 
         //Отладка
-        System.out.print("* Server received command: " + a + ", file length: " + b + ", name of file: ");
+        System.out.print("* Command: " + a + ", " + "name of file length: "
+                + b + ", file name: ");
         for (int i = 0; i < name.length; i++) {
             System.out.print((char) name[i]);
         }
-        System.out.println();
-        System.out.print("* dataLength: " + dataLength + ", data: ");
+        System.out.println(" data length: " + dataLength);
+        System.out.print("data: ");
         for (int i = 0; i < data.length; i++) {
             System.out.print((char) data[i]);
         }
@@ -69,9 +79,9 @@ public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
 
 //        ctx.fireChannelRead(msg);
 
-        //Отправим, что приняли (пишем в объект)
-        ctx.write(Unpooled.copiedBuffer("* Server received msg", CharsetUtil.UTF_8));
-        ctx.flush();
+        //Отправим, что приняли
+        ctx.writeAndFlush(Unpooled.copiedBuffer("* Server received msg", CharsetUtil.UTF_8));
+        //ctx.flush();
     }
 
     @Override
@@ -91,7 +101,6 @@ public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-
         System.out.println("Client " + ctx.channel().remoteAddress() + " disconnected");
     }
 }

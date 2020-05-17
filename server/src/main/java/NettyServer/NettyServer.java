@@ -10,11 +10,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * - Добавить возможность работы с разными протоколами
- * -
+ * - Если Клиент шлет одновременно 2 файла...
  */
 public class NettyServer {
     private final int port;
@@ -25,11 +26,11 @@ public class NettyServer {
     private NioEventLoopGroup workerGroup;
 
     private ServerFileController fileController;
+    private String usersDirectory = "server_storage";
 
     public NettyServer(int port) {
         this.port = port;
-        this.fileController = new ServerFileController(Paths.get("storage"));
-        System.out.println("NettyServer " + Paths.get("storage"));
+        this.fileController = new ServerFileController(Paths.get(usersDirectory));
     }
 
     public void start() {

@@ -32,7 +32,7 @@ public class FilesController {
     private Path root;
     private Path selectedCopyFile;
     private Path selectedMoveFile;
-    private String selectSendFile;
+    private Path selectSendFile;
 
     public void initialize() {
         list.getItems().add("saf");
@@ -65,7 +65,7 @@ public class FilesController {
             }
         });
         //String dir = System.getProperty("user.dir");
-        Path path = Paths.get("1");
+        Path path = Paths.get("client_storage");
         goToPath(path);
     }
 
@@ -128,7 +128,8 @@ public class FilesController {
         if (mouseEvent.getClickCount() == 1) {
             if (fileInfo != null) {
                 if (!fileInfo.isDirectory() && !fileInfo.getFilename().equals(FileInfo.UP_TOKEN)) {
-                    selectSendFile = fileInfo.getFilename();
+//                    selectSendFile = fileInfo.getFilename();
+                    selectSendFile = root.resolve(fileInfo.getFilename());
                     System.out.println("Выбрали файл: " + selectSendFile + " ");
                 }
             }
@@ -217,7 +218,7 @@ public class FilesController {
         }
     }
 
-    public String getSelectSendFile() {
+    public Path getSelectSendFile() {
         return selectSendFile;
     }
 }

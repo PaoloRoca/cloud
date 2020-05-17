@@ -14,14 +14,14 @@
         <Insets top="10" right="10" bottom="10" left="10" />
     </padding>
 
-        <TextField fx:id="host" editable="false" focusTraversable="false" text="localhost"
+        <TextField fx:id="hostTField" editable="false" focusTraversable="false" text="localhost"
                    GridPane.columnIndex="0" GridPane.rowIndex="0" />
-        <TextField fx:id="port" focusTraversable="false" text="8080"
+        <TextField fx:id="portTField" focusTraversable="false" text="8080"
                    GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-        <TextField fx:id="userName" focusTraversable="false" text="Christmas tree"
+        <TextField fx:id="userNameTField" focusTraversable="false" text="Christmas tree"
                    GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <PasswordField fx:id="password" focusTraversable="false" text="password"
+        <PasswordField fx:id="passwordTField" focusTraversable="false" text="password"
                        GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
         <Button fx:id="btnConnect" onAction="#connectToServer" text="Connect"
