@@ -5,7 +5,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
 
 import java.io.BufferedOutputStream;
@@ -34,7 +33,7 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
     //Вызывается при установлении соединения
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        System.out.println("*** ClientReadFromServer.channelActive");
+        System.out.println("* ClientReadFromServer.channelActive");
     }
 
     //Чтение данных от сервера
@@ -42,7 +41,7 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf in = ((ByteBuf) msg);
         String strBul = in.toString(CharsetUtil.UTF_8);
-        System.out.println("*** ClientConnectHandler.channelRead0: " + in.toString(CharsetUtil.UTF_8) + " ");
+        System.out.println("*** ClientReadFromServer.channelRead: " + in.toString(CharsetUtil.UTF_8) + " ");
 
         while (in.readableBytes() > 0) {
             if (currentState == State.IDLE) {
@@ -66,7 +65,7 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                 if (in.readableBytes() >= 4) {
                     nameLength = in.readByte();
                     currentState = State.NAME;
-                    System.out.print("NAME_LENGTH: " + nameLength);
+                    System.out.print(" NAME_LENGTH: " + nameLength);
                 }
             }
             if (currentState == State.NAME) {
@@ -75,13 +74,13 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                     in.readBytes(fileName);
                     out = new BufferedOutputStream(new FileOutputStream("_" + new String(fileName)));
                     currentState = State.FILE_LENGTH;
-                    System.out.print("NAME: " + new String(fileName, "UTF-8"));
+                    System.out.print(" NAME: " + new String(fileName, "UTF-8"));
                 }
             }
             if (currentState == State.FILE_LENGTH) {
                 if (in.readableBytes() >= 4) {
                     fileLength = in.readInt();
-                    System.out.print("FILE_LENGTH: " + fileLength);
+                    System.out.print(" FILE_LENGTH: " + fileLength);
                     currentState = State.FILE;
                 }
             }
@@ -98,7 +97,7 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                     receivedFileLength++;
                     if (fileLength == receivedFileLength) {
                         currentState = State.IDLE;
-                        System.out.print("File received");
+                        System.out.print(" File received");
                         out.close();
                         break;
                     }
@@ -110,7 +109,7 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                     in.readBytes(arr);
                     currentState = State.IDLE;
                     FilesController.filesController.showServerFiles(arr);
-                    System.out.print("The directory structure received");
+                    System.out.print(". The directory structure received");
                     break;
                 }
             }

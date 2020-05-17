@@ -48,7 +48,8 @@ public class NettyServer {
              .childHandler(new ChannelInitializer<SocketChannel>() { //Добавляем обработчик на канал
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new ServerInBoundHandler());
+//                        ch.pipeline().addLast(new ServerInBoundHandler());
+                        ch.pipeline().addLast(new FrameHandler());
                         ch.pipeline().addLast(new ServerOutBoundHandler());
                     }
             });

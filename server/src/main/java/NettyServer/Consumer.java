@@ -15,4 +15,8 @@ public class Consumer {
     public ChannelHandlerContext getChannel() {
         return channel;
     }
+
+    public Path getUserDirectory() {
+        return userDirectory;
+    }
 }

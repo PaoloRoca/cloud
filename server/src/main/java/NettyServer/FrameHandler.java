@@ -1,18 +1,23 @@
 package NettyServer;
 
+import NettyServer.file_controller.ServerFileController;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.CharsetUtil;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class FrameHandler extends ChannelInboundHandlerAdapter {
     public enum State {
         IDLE, COMMAND, NAME_LENGTH, NAME, FILE_LENGTH, FILE
     }
 
-    private final byte COMMAND_RECEIPT_FILE = 1;
+    private final byte COMMAND_RECEIPT_FILE = 49; //1
     private final byte COMMAND_DELETE_FILE = 2;
     private final byte COMMAND_SEND_FILE = 3;
 
@@ -22,8 +27,32 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
     private BufferedOutputStream out;
     private int fileLength; //Длина данных файла
 
+    private Consumer consumer;
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("* FrameHandler.channelActive: ");
+        ctx.fireChannelActive();
+
+        //TODO
+        Path path = Paths.get("server_storage", "1");
+        System.out.println(path);
+        this.consumer = new Consumer(ctx, path);
+        //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
+//        byte[] userFiles = ServerFileController.getFilesNameList(
+//                ServerFileController.getDirectory(consumer.getUserDirectory()));
+        byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
+        CommandService.sendDirectoryStruct(ctx, userFiles);
+
+        System.out.print("ServerInBoundHandler.channelActive ");
+        System.out.println("*** Client " + ctx.channel().remoteAddress() + " connected");
+        ctx.writeAndFlush(Unpooled.copiedBuffer("* Server channel send", CharsetUtil.UTF_8));
+
+    }
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        System.out.println("* FrameHandler.channelRead: ");
         ByteBuf in = ((ByteBuf) msg);
 
         while (in.readableBytes() > 0) {
@@ -32,9 +61,9 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
                 if (read == COMMAND_RECEIPT_FILE) {
                     currentState = State.NAME_LENGTH;
                     receivedFileLength = 0;
-                    System.out.println("COMMAND: " + read);
+                    System.out.print("COMMAND 1/49: " + read);
                 } else {
-                    System.out.println("ERROR: Invalid first byte - " + read);
+                    System.out.println(" !!! ERROR: Invalid first byte - " + read);
                     //TODO рубим соединение
                 }
             }
@@ -42,22 +71,24 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
                 if (in.readableBytes() >= 4) {
                     nameLength = in.readByte();
                     currentState = State.NAME;
-                    System.out.println("NAME_LENGTH: " + nameLength);
+                    System.out.print(" NAME_LENGTH: " + nameLength);
                 }
             }
             if (currentState == State.NAME) {
                 if (in.readableBytes() >= nameLength) {
                     byte[] fileName = new byte[nameLength];
                     in.readBytes(fileName);
-                    out = new BufferedOutputStream(new FileOutputStream("_" + new String(fileName)));
+                    out = new BufferedOutputStream(
+                            new FileOutputStream(consumer.getUserDirectory() + "\\" + "_" + new String(fileName)));
+//                    System.out.println(consumer.getUserDirectory() + "\\" + "_" + new String(fileName));
                     currentState = State.FILE_LENGTH;
-                    System.out.println("NAME: " + new String(fileName, "UTF-8"));
+                    System.out.print(" NAME: " + new String(fileName, "UTF-8"));
                 }
             }
             if (currentState == State.FILE_LENGTH) {
-                if (in.readableBytes() >= 8) {
+                if (in.readableBytes() >= 4) {
                     fileLength = in.readInt();
-                    System.out.println("FILE_LENGTH: " + fileLength);
+                    System.out.print(" FILE_LENGTH: " + fileLength);
                     currentState = State.FILE;
                 }
             }
@@ -67,8 +98,11 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
                     receivedFileLength++;
                     if (fileLength == receivedFileLength) {
                         currentState = State.IDLE;
-                        System.out.println("File received");
+                        System.out.print(" File received");
                         out.close();
+                        //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
+                        byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
+                        CommandService.sendDirectoryStruct(ctx, userFiles);
                         break;
                     }
                 }
@@ -80,7 +114,12 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("Client " + ctx.channel().remoteAddress() + " disconnected");
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
     }

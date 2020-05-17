@@ -3,13 +3,14 @@ package NettyServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.CharsetUtil;
 
-import java.nio.ByteBuffer;
-
+/**
+ * byte[] arr - список файлов/каталогов папки Клиента
+ */
 public class CommandService {
     public static void sendDirectoryStruct (ChannelHandlerContext ctx, byte[] arr) {
-        System.out.println("* CommandService.sendDirectoryStruct: ");
+        System.out.println();
+        System.out.print("* CommandService.sendDirectoryStruct: ");
 
         int capacity =
                 1 +         //command byte

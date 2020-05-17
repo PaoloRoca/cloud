@@ -49,7 +49,7 @@ public class ServerFileController {
         }
         //ByteBuf buf = Unpooled.wrappedBuffer(arr);
 
-        System.out.println("ServerFileController: " + files);
+        System.out.println("* ServerFileController. Список файлов клиента: " + files);
 
         return arr;
     }
