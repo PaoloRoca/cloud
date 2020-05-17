@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +21,7 @@ public class FilesController {
     @FXML
     private ListView<FileInfo> filesList;
     @FXML
-    public ListView list;
+    public ListView<String> serverList;
     @FXML
     private TextField clientFiles;
     @FXML
@@ -35,7 +37,7 @@ public class FilesController {
     private Path selectSendFile;
 
     public void initialize() {
-        list.getItems().add("saf");
+        serverList.getItems().add("saf");
         this.filesController = this;
 
         filesList.setCellFactory(new Callback<ListView<FileInfo>, ListCell<FileInfo>>() {
@@ -67,6 +69,22 @@ public class FilesController {
         //String dir = System.getProperty("user.dir");
         Path path = Paths.get("client_storage");
         goToPath(path);
+    }
+
+    public void showServerFiles (byte[] arr) {
+        String str = new String(arr);
+
+//        for (int i = 0; i < arr.length; i++) {
+//            str = str + Byte.toString(arr[i]);
+//        }
+        String[] filesArr = str.split("-");
+        List<String> files = new ArrayList<>(Arrays.asList(filesArr));
+
+        serverList.getItems().clear();
+        for (String s : files) {
+            serverList.getItems().add(s);
+        }
+
     }
 
     public void goToPath(Path path) {
