@@ -29,6 +29,7 @@ public class ConnectController {
     private Channel channel;
     private ChannelFuture channelFuture;
     private EventLoopGroup group;
+    private Boolean connect;
 
     //TODO
 //    private Logger logger = LoggerFactory.getLogger(ConnectController.class);
@@ -39,18 +40,20 @@ public class ConnectController {
         client = new Client();
 
         try {
-            connect();
+            connect(client);
             client.setClientParam(hostTField.getText(), Integer.parseInt(portTField.getText().trim()),
                     userNameTField.getText(), passwordTField.getText());
             labelConnect.setText("Connecting OK");
             btnConnect.setDisable(true);
             btnDisconnect.setDisable(false);
-            mainController.setClient (client); //TODO
+            mainController.setClient (client);
+            connect = true;
 
         } catch (Exception e) {
             e.printStackTrace();
             labelConnect.setText("Error connecting to the server");
             btnDisconnect.setDisable(true);
+            connect = false;
         }
     }
 
@@ -72,7 +75,7 @@ public class ConnectController {
         this.mainController = mainController;
     }
 
-    public void connect() throws Exception {
+    public void connect(Client client) throws Exception {
         group = new NioEventLoopGroup(); //Обработка событий
 
         Bootstrap b = new Bootstrap(); //Инициализация клиента
@@ -82,7 +85,7 @@ public class ConnectController {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) {
-                        ch.pipeline().addLast(new ClientReadFromServer()); //
+                        ch.pipeline().addLast(new ClientReadFromServer(client)); //
 //                        ch.pipeline().addLast(new ClientWriteToServer()); //
                     }
                 });
@@ -96,7 +99,9 @@ public class ConnectController {
         if (channelFuture != null) {
             channelFuture.channel().closeFuture();
         }
-        group.shutdownGracefully().sync();
+        if (group != null) {
+            group.shutdownGracefully().sync();
+        }
     }
 
     public Channel getChannel() {

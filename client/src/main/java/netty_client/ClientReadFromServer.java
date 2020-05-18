@@ -15,14 +15,21 @@ import java.io.FileOutputStream;
  */
 @Sharable
 public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
-    public enum State {
-        IDLE, COMMAND, NAME_LENGTH, NAME, FILE_LENGTH, DATA_LENGTH, FILE, DATA
+    Client client;
+
+    public ClientReadFromServer(Client client) {
+        this.client = client;
     }
 
-    private final byte COM_DIRECTORY_STRUCT = 52;  //4
-    private final byte COM_RECEIPT_FILE = 1;
+    public enum State {
+        IDLE, COMMAND, NAME_LENGTH, NAME, FILE_LENGTH, FILE,
+        DATA_LENGTH, DATA //получение структуры каталогов
+    }
+
+    private final byte COM_DIRECTORY_STRUCT = 52;  //4 Передача каталога от Сервера
+    private final byte COM_SEND_FILE = 1; //Отправка файла на сервер
 //    private final byte COMMAND_DELETE_FILE = 2;
-//    private final byte COMMAND_SEND_FILE = 3;
+    private final byte COMMAND_RECEIVE_FILE = 54; //6 Получение файла с сервера
 
     private State currentState = State.IDLE;
     private int receivedFileLength;  //Принято байт файла
@@ -40,29 +47,30 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf in = ((ByteBuf) msg);
-        String strBul = in.toString(CharsetUtil.UTF_8);
         System.out.println("*** ClientReadFromServer.channelRead: " + in.toString(CharsetUtil.UTF_8) + " ");
 
         while (in.readableBytes() > 0) {
             if (currentState == State.IDLE) {
                 byte read = in.readByte();
-                if (read == COM_RECEIPT_FILE) {
+                if (read == COMMAND_RECEIVE_FILE) {
                     currentState = State.NAME_LENGTH;
                     receivedFileLength = 0;
-                    System.out.print("COMMAND 1: " + read);
+                    System.out.print("COMMAND 6/54: " + read);
                 }
                 else if (read == COM_DIRECTORY_STRUCT) {
                     currentState = State.DATA_LENGTH;
                     receivedFileLength = 0;
-                    System.out.print("COMMAND 4: " + read);
+                    System.out.print("COMMAND 4/52: " + read);
                 }
                 else {
                     System.out.println("ERROR: Invalid first byte - " + read);
                     //TODO рубим соединение
+                    currentState = State.IDLE;
+                    in.release();
                 }
             }
             if (currentState == State.NAME_LENGTH) {
-                if (in.readableBytes() >= 4) {
+                if (in.readableBytes() >= 1) {
                     nameLength = in.readByte();
                     currentState = State.NAME;
                     System.out.print(" NAME_LENGTH: " + nameLength);
@@ -72,9 +80,10 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                 if (in.readableBytes() >= nameLength) {
                     byte[] fileName = new byte[nameLength];
                     in.readBytes(fileName);
-                    out = new BufferedOutputStream(new FileOutputStream("_" + new String(fileName)));
+                    String dir = client.getUserDir() + "\\" + new String(fileName);
+                    out = new BufferedOutputStream(new FileOutputStream(dir));
                     currentState = State.FILE_LENGTH;
-                    System.out.print(" NAME: " + new String(fileName, "UTF-8"));
+                    System.out.print(" NAME: " + dir);
                 }
             }
             if (currentState == State.FILE_LENGTH) {
@@ -97,8 +106,10 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                     receivedFileLength++;
                     if (fileLength == receivedFileLength) {
                         currentState = State.IDLE;
-                        System.out.print(" File received");
+                        FilesController.filesController.refresh();
+                        System.out.print(" ++ File received");
                         out.close();
+
                         break;
                     }
                 }
@@ -108,8 +119,9 @@ public class ClientReadFromServer extends ChannelInboundHandlerAdapter {
                     byte[] arr = new byte[fileLength];
                     in.readBytes(arr);
                     currentState = State.IDLE;
+                    //TODO Callback!
                     FilesController.filesController.showServerFiles(arr);
-                    System.out.print(". The directory structure received");
+                    System.out.print(". ++ The directory structure received");
                     break;
                 }
             }

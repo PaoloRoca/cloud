@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane maxWidth="Infinity" HBox.hgrow="ALWAYS" hgap="5" vgap="5"
+<GridPane hgap="5" vgap="5" prefHeight="Infinity" prefWidth="Infinity"
       xmlns="http://javafx.com/javafx/8"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="netty_client.MainController">
@@ -20,8 +20,8 @@
     </HBox>
 
     <HBox GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2">
-        <Button onAction="#send" text="send file" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <Button onAction="#receive" text="receive file" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <Button fx:id="btnSend" onAction="#send" text="send file" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <Button fx:id="btnReceive" onAction="#receive" text="receive file" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
     </HBox>
 
     <HBox GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">

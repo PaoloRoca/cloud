@@ -13,14 +13,14 @@
     <TextField fx:id="serverFiles" editable="false" text="Server" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
     <ListView fx:id="filesList" onMouseClicked="#filesListClicked" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-    <ListView fx:id="serverList" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+    <ListView fx:id="serverList" onMouseClicked="#serverListClicked" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
     <HBox GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
-        <Button maxWidth="Infinity" onAction="#catalog" text="Catalog" HBox.hgrow="ALWAYS" />
-        <Button maxWidth="Infinity" text="Просмотр" HBox.hgrow="ALWAYS" />
-        <Button maxWidth="Infinity" onAction="#copy" text="Copy" HBox.hgrow="ALWAYS" />
-        <Button maxWidth="Infinity" onAction="#move" text="Move" HBox.hgrow="ALWAYS" />
-        <Button maxWidth="Infinity" onAction="#delete" text="Delete" HBox.hgrow="ALWAYS" />
+        <Button fx:id="btnDir" maxWidth="Infinity" onAction="#catalog" text="Catalog" HBox.hgrow="ALWAYS" disable="true" />
+        <Button fx:id="btnPreview" maxWidth="Infinity" text="Preview" HBox.hgrow="ALWAYS" disable="true" />
+        <Button fx:id="btnCopy" maxWidth="Infinity" onAction="#copy" text="Copy" HBox.hgrow="ALWAYS" disable="true" />
+        <Button fx:id="btnMove" maxWidth="Infinity" onAction="#move" text="Move" HBox.hgrow="ALWAYS" disable="true" />
+        <Button fx:id="btnDelete" maxWidth="Infinity" onAction="#delete" text="Delete" HBox.hgrow="ALWAYS" disable="true" />
     </HBox>
 
 </GridPane>

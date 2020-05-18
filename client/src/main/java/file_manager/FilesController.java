@@ -26,6 +26,8 @@ public class FilesController {
     private TextField clientFiles;
     @FXML
     private TextField serverFiles;
+    @FXML
+    private Button btnDir, btnPreview, btnCopy, btnMove, btnDelete;
 
     //TODO Как получить ссылку этот контроллер из главного контроллера
     public static FilesController filesController;
@@ -35,9 +37,10 @@ public class FilesController {
     private Path selectedCopyFile;
     private Path selectedMoveFile;
     private Path selectSendFile;
+    private String selectReceiveFile;
 
     public void initialize() {
-        serverList.getItems().add("saf");
+        serverList.getItems().add("No connection!");
         this.filesController = this;
 
         filesList.setCellFactory(new Callback<ListView<FileInfo>, ListCell<FileInfo>>() {
@@ -74,9 +77,6 @@ public class FilesController {
     public void showServerFiles (byte[] arr) {
         String str = new String(arr);
 
-//        for (int i = 0; i < arr.length; i++) {
-//            str = str + Byte.toString(arr[i]);
-//        }
         String[] filesArr = str.split("-");
         List<String> files = new ArrayList<>(Arrays.asList(filesArr));
 
@@ -128,6 +128,11 @@ public class FilesController {
 
     public void filesListClicked(MouseEvent mouseEvent) {
         System.out.println("** FilesController.filesListClicked ");
+        btnDir.setDisable(false);
+        btnPreview.setDisable(false);
+        btnCopy.setDisable(false);
+        btnMove.setDisable(false);
+        btnDelete.setDisable(false);
 
         FileInfo fileInfo = filesList.getSelectionModel().getSelectedItem();
         if (mouseEvent.getClickCount() == 2) {
@@ -148,10 +153,23 @@ public class FilesController {
                 if (!fileInfo.isDirectory() && !fileInfo.getFilename().equals(FileInfo.UP_TOKEN)) {
 //                    selectSendFile = fileInfo.getFilename();
                     selectSendFile = root.resolve(fileInfo.getFilename());
-                    System.out.println("Выбрали файл: " + selectSendFile + " ");
+                    System.out.println("Выбрали файл на клиенте: " + selectSendFile + " ");
                 }
             }
         }
+    }
+
+    public void serverListClicked(MouseEvent mouseEvent) {
+        System.out.println("** FilesController.serverListClicked ");
+        btnDir.setDisable(true);
+        btnPreview.setDisable(true);
+        btnCopy.setDisable(true);
+        btnMove.setDisable(true);
+        btnDelete.setDisable(false);
+
+        selectReceiveFile = serverList.getSelectionModel().getSelectedItem();
+
+        System.out.println("Выбрали файл на сервере: " + selectReceiveFile + " ");
     }
 
     public void refresh() {
@@ -236,7 +254,12 @@ public class FilesController {
         }
     }
 
-    public Path getSelectSendFile() {
+    public Path getSelectFileToSend() {
         return selectSendFile;
     }
+
+    public String getSelectFileToReceive() {
+        return selectReceiveFile;
+    }
+
 }

@@ -14,12 +14,13 @@ import java.nio.file.Paths;
 
 public class FrameHandler extends ChannelInboundHandlerAdapter {
     public enum State {
-        IDLE, COMMAND, NAME_LENGTH, NAME, FILE_LENGTH, FILE
+        IDLE, COMMAND, NAME_LENGTH, NAME, FILE_LENGTH, FILE,
+        FILE_NAME_LENGTH, FILE_NAME
     }
 
-    private final byte COMMAND_RECEIPT_FILE = 49; //1
+    private final byte COMMAND_RECEIVE_FILE = 49; //1 Получение файла с Клиента
     private final byte COMMAND_DELETE_FILE = 2;
-    private final byte COMMAND_SEND_FILE = 3;
+    private final byte COMMAND_SEND_FILE = 51; //3 Запрос на получение файла
 
     private State currentState = State.IDLE;
     private int receivedFileLength;  //Принято байт файла
@@ -32,6 +33,7 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("* FrameHandler.channelActive: ");
+        System.out.println("Client " + ctx.channel().remoteAddress() + " connected");
         ctx.fireChannelActive();
 
         //TODO
@@ -42,7 +44,7 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
 //        byte[] userFiles = ServerFileController.getFilesNameList(
 //                ServerFileController.getDirectory(consumer.getUserDirectory()));
         byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
-        CommandService.sendDirectoryStruct(ctx, userFiles);
+        CommandServer.sendDirectoryStruct(ctx, userFiles);
 
         System.out.print("ServerInBoundHandler.channelActive ");
         System.out.println("*** Client " + ctx.channel().remoteAddress() + " connected");
@@ -58,20 +60,33 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
         while (in.readableBytes() > 0) {
             if (currentState == State.IDLE) {
                 byte read = in.readByte();
-                if (read == COMMAND_RECEIPT_FILE) {
+                if (read == COMMAND_RECEIVE_FILE) {
                     currentState = State.NAME_LENGTH;
                     receivedFileLength = 0;
                     System.out.print("COMMAND 1/49: " + read);
-                } else {
+                }
+                else if (read == COMMAND_SEND_FILE) {
+                    currentState = State.FILE_NAME_LENGTH;
+                    receivedFileLength = 0;
+                    System.out.print("COMMAND 3/51: " + read);
+                }
+                else {
                     System.out.println(" !!! ERROR: Invalid first byte - " + read);
                     //TODO рубим соединение
                 }
             }
             if (currentState == State.NAME_LENGTH) {
-                if (in.readableBytes() >= 4) {
+                if (in.readableBytes() >= 1) {
                     nameLength = in.readByte();
                     currentState = State.NAME;
                     System.out.print(" NAME_LENGTH: " + nameLength);
+                }
+            }
+            if (currentState == State.FILE_NAME_LENGTH) {
+                if (in.readableBytes() >= 1) {
+                    nameLength = in.readByte();
+                    currentState = State.FILE_NAME;
+                    System.out.print(" FILE_NAME_LENGTH: " + nameLength);
                 }
             }
             if (currentState == State.NAME) {
@@ -102,9 +117,19 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
                         out.close();
                         //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
                         byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
-                        CommandService.sendDirectoryStruct(ctx, userFiles);
+                        CommandServer.sendDirectoryStruct(ctx, userFiles);
                         break;
                     }
+                }
+            }
+            if (currentState == State.FILE_NAME) {
+                if (in.readableBytes() >= nameLength) {
+                    byte[] fileName = new byte[nameLength];
+                    in.readBytes(fileName);
+                    String file = new String(fileName);
+                    System.out.println(", FILE_NAME: " + file);
+                    CommandServer.sendFileToClient (ctx, consumer, file);
+                    currentState = State.IDLE;
                 }
             }
         }

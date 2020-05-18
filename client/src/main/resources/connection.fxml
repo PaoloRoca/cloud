@@ -27,7 +27,7 @@
         <Button fx:id="btnConnect" onAction="#connectToServer" text="Connect"
                 alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
         <Button fx:id="btnDisconnect" onAction="#disconnectFromServer" text="Disconnect"
-                GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                GridPane.columnIndex="1" GridPane.rowIndex="2" disable="true"/>
 
         <Label fx:id="labelConnect" text=" "
                GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"/>

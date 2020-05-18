@@ -1,5 +1,7 @@
-package NettyServer;
+package garbage;
 
+import NettyServer.CommandServer;
+import NettyServer.Consumer;
 import NettyServer.file_controller.ServerFileController;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -24,7 +26,7 @@ public class ServerInBoundHandler extends ChannelInboundHandlerAdapter {
         this.consumer = new Consumer(ctx, path);
         //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
         byte[] userFiles = ServerFileController.getFilesNameList(ServerFileController.getDirectory("1"));
-        CommandService.sendDirectoryStruct(ctx, userFiles);
+        CommandServer.sendDirectoryStruct(ctx, userFiles);
 
         System.out.print("ServerInBoundHandler.channelActive ");
         System.out.println("*** Client " + ctx.channel().remoteAddress() + " connected");

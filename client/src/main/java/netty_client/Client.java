@@ -9,6 +9,7 @@ public class Client {
     private String password;
 
     private Channel channel;
+    private String userDir;
 
     public void setHost(String host) {
         this.host = host;
@@ -35,6 +36,7 @@ public class Client {
     }
 
     public void setClientParam (String host, int port, String userName, String password) {
+        this.userDir = "client_storage";
         this.host = host;
         this.port = port;
         this.userName = userName;
@@ -51,6 +53,10 @@ public class Client {
 
     public String getUserName() {
         return userName;
+    }
+
+    public String getUserDir() {
+        return userDir;
     }
 
     public Client() {
