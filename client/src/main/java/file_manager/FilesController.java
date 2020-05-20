@@ -75,6 +75,7 @@ public class FilesController {
     }
 
     public void showServerFiles (byte[] arr) {
+        System.out.println("FilesController.showServerFiles");
         String str = new String(arr);
 
         String[] filesArr = str.split("-");
@@ -84,7 +85,6 @@ public class FilesController {
         for (String s : files) {
             serverList.getItems().add(s);
         }
-
     }
 
     public void goToPath(Path path) {

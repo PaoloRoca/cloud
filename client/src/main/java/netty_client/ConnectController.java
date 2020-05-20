@@ -86,12 +86,12 @@ public class ConnectController {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new ClientReadFromServer(client)); //
+                        channel = ch;
 //                        ch.pipeline().addLast(new ClientWriteToServer()); //
                     }
                 });
 
         channelFuture = b.connect().sync(); //Все установлено, подключаемся к удаленному узлу
-        channel = channelFuture.channel();
         client.setChannel(channel);
     }
 
@@ -106,5 +106,9 @@ public class ConnectController {
 
     public Channel getChannel() {
         return channel;
+    }
+
+    public Boolean getConnect() {
+        return connect;
     }
 }

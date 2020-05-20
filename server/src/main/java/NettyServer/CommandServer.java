@@ -2,11 +2,12 @@ package NettyServer;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.FileRegion;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -14,23 +15,28 @@ import java.nio.file.Path;
  * byte[] arr - список файлов/каталогов папки Клиента
  */
 public class CommandServer {
+    private static int BUFFER_SIZE = 64 * 1024; //64kB
+
+    private static String SEND_FILE_TO_CLIENT = "6";
+    private static String SEND_DIRECTORY_STRUCT = "4";
+
     public static void sendDirectoryStruct (ChannelHandlerContext ctx, byte[] arr) {
         System.out.println();
         System.out.print("* CommandService.sendDirectoryStruct: ");
 
         int capacity =
                 1 +         //command byte
-                4 +         //length of transmitted data
+                8 +         //length of transmitted data
                 arr.length; //data
 
         ByteBuf buf = Unpooled.buffer(capacity);
 
-        buf.writeBytes("4".getBytes());
-        buf.writeInt(arr.length);
+        buf.writeBytes(SEND_DIRECTORY_STRUCT.getBytes());
+        buf.writeLong(arr.length);
         buf.writeBytes(arr);
 
-        //Отладка
-        System.out.print("* Command: " + "4" + ", " + "data length: " + arr.length + ", data: ");
+        //Test
+        System.out.print("* Command: " + SEND_DIRECTORY_STRUCT + ", " + "data length: " + arr.length + ", data: ");
         for (byte b : arr) {
             System.out.print((char) b);
         }
@@ -42,46 +48,38 @@ public class CommandServer {
     public static void sendFileToClient (ChannelHandlerContext ctx, Consumer consumer, String file) throws IOException {
         System.out.println(" * CommandServer.sendFileToClient");
 
-        InputStream in = Files.newInputStream(consumer.getUserDirectory().resolve(file));
-        System.out.println(" send file: " + consumer.getUserDirectory().resolve(file));
+        Path path = consumer.getUserDirectory().resolve(file);
+        FileRegion region = new DefaultFileRegion(path.toFile(), 0, Files.size(path));
 
-        int bufferSize = 32000;
-        byte[] fileBuffer = new byte[in.available()];
-
-        while (in.available() > 0) {
-            if (in.available() < 32000) bufferSize = in.available();
-            in.read(fileBuffer, 0, bufferSize);
-            //TODO если файл больше 32000
-        }
-
-        int capacity =
+        long capacity =
                 1 + //command
-                1 + //file name length (больше 254)
+                1 + //file name length (не больше 254)
                 file.trim().getBytes().length + //name of file
-                4 +  //data length
-                fileBuffer.length; //data
+                8 +  //data length
+                Files.size(path); //fileBuffer.length; //data
 
-        ByteBuf byteBuf = Unpooled.buffer(capacity);
+        ByteBuf byteBuf = Unpooled.buffer(1+1+1+8);
 
-        byteBuf.writeBytes("6".getBytes()); //Команда
-        byteBuf.writeByte(file.trim().getBytes().length); //Длина имени файла не (больше 254)
-        byteBuf.writeBytes(file.getBytes()); //Имя файла
-        byteBuf.writeInt(fileBuffer.length); // Размер данных
-        byteBuf.writeBytes(fileBuffer); // Данные файла
+        byteBuf.writeBytes(SEND_FILE_TO_CLIENT.getBytes()); //Команда
+        byteBuf.writeByte(file.trim().getBytes().length); //Длина имени файла (не больше 254)
+        byteBuf.writeBytes(file.trim().getBytes(StandardCharsets.UTF_8)); //Имя файла
+        byteBuf.writeLong(Files.size(path)); // Размер данных
 
-//        ChannelPipeline pipeline = connectController.getChannel().pipeline();
-//        pipeline.writeAndFlush(byteBuf);
         ctx.writeAndFlush(byteBuf);
+        ctx.writeAndFlush(region);// Данные файла
 
-        //Отладка
-        System.out.println("* Server received command: " + "6" + ", " +
+        //Test
+        System.out.println("* Server received command: " + SEND_FILE_TO_CLIENT + ", " +
                 "name of file length: " + file.trim().getBytes().length + ", " +
-                "file name: " + file +", data length: " + fileBuffer.length);
+                "file name: " + file +", data length: " + Files.size(path));
         System.out.print("Data: ");
-        for (int i = 0; i < fileBuffer.length; i++) {
-            System.out.print((char) fileBuffer[i]);
-        }
+        System.out.println(region.toString());
         System.out.println();
+
+//        for (int i = 0; i < fileBuffer.length; i++) {
+//            System.out.print((char) fileBuffer[i]);
+//        }
+
     }
 
 //    public static void deleteFile () {

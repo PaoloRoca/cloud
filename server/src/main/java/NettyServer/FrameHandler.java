@@ -7,14 +7,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FrameHandler extends ChannelInboundHandlerAdapter {
     public enum State {
-        IDLE, COMMAND, NAME_LENGTH, NAME, FILE_LENGTH, FILE,
+        IDLE, NAME_LENGTH, NAME, FILE_LENGTH, FILE,
         FILE_NAME_LENGTH, FILE_NAME
     }
 
@@ -25,10 +25,13 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
     private State currentState = State.IDLE;
     private int receivedFileLength;  //Принято байт файла
     private byte nameLength; //Длина имени файла
-    private BufferedOutputStream out;
-    private int fileLength; //Длина данных файла
+    private OutputStream out;
+    private long fileLength; //Длина данных файла
 
     private Consumer consumer;
+
+    long startTime;
+    long finishTime;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -61,6 +64,7 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
             if (currentState == State.IDLE) {
                 byte read = in.readByte();
                 if (read == COMMAND_RECEIVE_FILE) {
+                    startTime = System.currentTimeMillis(); //Измерение вермени приема файла
                     currentState = State.NAME_LENGTH;
                     receivedFileLength = 0;
                     System.out.print("COMMAND 1/49: " + read);
@@ -93,31 +97,35 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
                 if (in.readableBytes() >= nameLength) {
                     byte[] fileName = new byte[nameLength];
                     in.readBytes(fileName);
-                    out = new BufferedOutputStream(
-                            new FileOutputStream(consumer.getUserDirectory() + "\\" + "_" + new String(fileName)));
-//                    System.out.println(consumer.getUserDirectory() + "\\" + "_" + new String(fileName));
+                    Path path = consumer.getUserDirectory().resolve(new String(fileName));
+                    out = Files.newOutputStream(path);
                     currentState = State.FILE_LENGTH;
                     System.out.print(" NAME: " + new String(fileName, "UTF-8"));
                 }
             }
             if (currentState == State.FILE_LENGTH) {
-                if (in.readableBytes() >= 4) {
-                    fileLength = in.readInt();
-                    System.out.print(" FILE_LENGTH: " + fileLength);
+                if (in.readableBytes() >= 8) {
+                    fileLength = in.readLong();
+                    System.out.println(" FILE_LENGTH: " + fileLength);
                     currentState = State.FILE;
                 }
             }
             if (currentState == State.FILE) {
                 while (in.readableBytes() > 0) {
-                    out.write(in.readByte()); //Запись данных в файл пачками по 8кБ
-                    receivedFileLength++;
+                    int size = in.readableBytes();
+                    in.readBytes(out, size);
+                    receivedFileLength += size;
+                    System.out.println(" Принято байтов: " + size + " осталось: " + (fileLength - receivedFileLength));
                     if (fileLength == receivedFileLength) {
                         currentState = State.IDLE;
-                        System.out.print(" File received");
+                        System.out.print(" ++ File received");
                         out.close();
                         //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
                         byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
                         CommandServer.sendDirectoryStruct(ctx, userFiles);
+
+                        finishTime = System.currentTimeMillis();
+                        System.out.println("\n время работы=" + (finishTime-startTime) + "ms.");
                         break;
                     }
                 }

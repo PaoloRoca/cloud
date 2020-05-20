@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -64,17 +65,42 @@ public class MainController {
         this.client = client;
     }
 
-    public void send(ActionEvent actionEvent) throws IOException, InterruptedException {
+    public void send(ActionEvent actionEvent) throws IOException {
         System.out.println("** MainController.send");
-        //TODO Кнопка не должна работать пока нет подключения к серверу
-        CommandClient.sendFileToServer (connectController.getChannel());
-
+        if (connectController != null) {
+            CommandClient.sendFileToServer(connectController.getChannel(), future -> {
+                if (future.isSuccess()) {
+                    System.out.println("The file was sent to the client!");
+                }
+                if (!future.isSuccess()) {
+                    System.out.println("Ошибка отправка файла!");
+                    errorDialog("Error sending a file to the server!");
+                    future.cause().printStackTrace();
+                }
+            });
+        } else {
+            errorDialog("Вы не подключены к сети!");
+        }
     }
 
     public void receive(ActionEvent actionEvent) {
         System.out.println("** MainController.receive");
-        //TODO проверка подключения к серверу
-        String name = FilesController.filesController.getSelectFileToReceive();
-        CommandClient.requestFileFromServer (connectController.getChannel(), name);
+        if (connectController != null) {
+            String name = FilesController.filesController.getSelectFileToReceive();
+            CommandClient.requestFileFromServer(connectController.getChannel(), name);
+        } else {
+            errorDialog("Вы не подключены к сети!");
+        }
+    }
+
+    //TODO в отдельный класс!!!
+    private void errorDialog (String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error Dialog");
+        //alert.setHeaderText("Look, an Error Dialog");
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+
+        alert.showAndWait();
     }
 }

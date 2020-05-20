@@ -2,6 +2,9 @@ package netty_client;
 
 import io.netty.channel.Channel;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class Client {
     private String host;
     private int port;
@@ -9,7 +12,7 @@ public class Client {
     private String password;
 
     private Channel channel;
-    private String userDir;
+    private Path userDir;
 
     public void setHost(String host) {
         this.host = host;
@@ -36,7 +39,7 @@ public class Client {
     }
 
     public void setClientParam (String host, int port, String userName, String password) {
-        this.userDir = "client_storage";
+        this.userDir = Paths.get("client_storage");
         this.host = host;
         this.port = port;
         this.userName = userName;
@@ -55,7 +58,7 @@ public class Client {
         return userName;
     }
 
-    public String getUserDir() {
+    public Path getUserDir() {
         return userDir;
     }
 

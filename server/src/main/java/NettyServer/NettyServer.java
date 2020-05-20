@@ -37,7 +37,7 @@ public class NettyServer {
         final ByteBuf buf = Unpooled.unreleasableBuffer(Unpooled.copiedBuffer("Hi!\r\n",Charset.forName("UTF-8")));
 
         bossGroup = new NioEventLoopGroup(); //обработка событий: новых соединений, чтение/запись
-        workerGroup = new NioEventLoopGroup(); //
+        workerGroup = new NioEventLoopGroup(2); //
 
         try {
             b = new ServerBootstrap();
