@@ -14,6 +14,7 @@ import javafx.stage.Stage;
  *      (надо грузить в окно реальное состояние соединения)
  * - Доп.поток на клиенте
  * - Добавить сериализацию
+ * - Отработка события: отвалился Сервер
  */
 public class Main extends Application {
     @Override

@@ -1,5 +1,6 @@
 package NettyServer;
 
+import NettyServer.state_receive.FrameHandlerOop;
 import NettyServer.file_controller.ServerFileController;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -10,7 +11,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -49,7 +49,8 @@ public class NettyServer {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
 //                        ch.pipeline().addLast(new ServerInBoundHandler());
-                        ch.pipeline().addLast(new FrameHandler());
+//                        ch.pipeline().addLast(new FrameHandler());
+                        ch.pipeline().addLast(new FrameHandlerOop());
                         ch.pipeline().addLast(new ServerOutBoundHandler());
                     }
             });

@@ -49,10 +49,7 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
         byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
         CommandServer.sendDirectoryStruct(ctx, userFiles);
 
-        System.out.print("ServerInBoundHandler.channelActive ");
-        System.out.println("*** Client " + ctx.channel().remoteAddress() + " connected");
         ctx.writeAndFlush(Unpooled.copiedBuffer("* Server channel send", CharsetUtil.UTF_8));
-
     }
 
     @Override
