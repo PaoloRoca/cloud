@@ -1,7 +1,5 @@
 package NettyServer.file_controller;
 
-import NettyServer.Consumer;
-import io.netty.channel.Channel;
 import org.apache.commons.lang3.ArrayUtils;
 import io.netty.util.CharsetUtil;
 
@@ -51,7 +49,7 @@ public class ServerFileController {
         }
         //ByteBuf buf = Unpooled.wrappedBuffer(arr);
 
-        System.out.println("* ServerFileController. Список файлов клиента: " + files);
+        System.out.println("* ServerFileController."+"\n"+ "Список файлов клиента: " + files);
 
         return arr;
     }

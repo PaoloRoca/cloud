@@ -1,7 +1,7 @@
 package garbage;
 
 import NettyServer.CommandServer;
-import NettyServer.Consumer;
+import NettyServer.consumer.Consumer;
 import NettyServer.file_controller.ServerFileController;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

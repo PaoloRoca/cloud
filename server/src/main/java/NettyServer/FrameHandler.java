@@ -1,37 +1,50 @@
 package NettyServer;
 
+import NettyServer.consumer.Consumer;
 import NettyServer.file_controller.ServerFileController;
+import NettyServer.state_receive.*;
+import NettyServer.state_send.NameLengthStateS;
+import NettyServer.state_send.NameStateS;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.CharsetUtil;
 
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FrameHandler extends ChannelInboundHandlerAdapter {
-    public enum State {
-        IDLE, NAME_LENGTH, NAME, FILE_LENGTH, FILE,
-        FILE_NAME_LENGTH, FILE_NAME
-    }
+    private Consumer consumer;
 
-    private final byte COMMAND_RECEIVE_FILE = 49; //1 Получение файла с Клиента
-    private final byte COMMAND_DELETE_FILE = 2;
-    private final byte COMMAND_SEND_FILE = 51; //3 Запрос на получение файла
+    private IStateReceive idleStateR;
+    private IStateReceive nameLenStateR;
+    private IStateReceive nameStateR;
+    private IStateReceive fileNameStateR;
+    private IStateReceive fileStateR;
+    private IStateReceive nameLenStateS;
+    private IStateReceive nameStateS;
 
-    private State currentState = State.IDLE;
-    private int receivedFileLength;  //Принято байт файла
+    private IStateReceive state; //Для хранения состояния
+
+    private Object msg = null;
+    private ChannelHandlerContext ctx; //TODO
+
+    private int receiveFileLength;  // Принято байт файла
     private byte nameLength; //Длина имени файла
     private OutputStream out;
     private long fileLength; //Длина данных файла
 
-    private Consumer consumer;
+    public void initialize() {
+        idleStateR = new IdleState(this);
+        nameLenStateR = new NameLengthStateR(this);
+        nameStateR = new NameStateR(this);
+        fileNameStateR = new FileLengthStateR(this);
+        fileStateR = new FileStateR(this);
+        nameLenStateS = new NameLengthStateS(this);
+        nameStateS = new NameStateS(this);
 
-    long startTime;
-    long finishTime;
+        state = idleStateR;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -39,17 +52,16 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
         System.out.println("Client " + ctx.channel().remoteAddress() + " connected");
         ctx.fireChannelActive();
 
+        initialize();
+
         //TODO
         Path path = Paths.get("server_storage", "1");
         System.out.println(path);
         this.consumer = new Consumer(ctx, path);
-        //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
-//        byte[] userFiles = ServerFileController.getFilesNameList(
-//                ServerFileController.getDirectory(consumer.getUserDirectory()));
+        this.ctx = ctx;
+
         byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
         CommandServer.sendDirectoryStruct(ctx, userFiles);
-
-        ctx.writeAndFlush(Unpooled.copiedBuffer("* Server channel send", CharsetUtil.UTF_8));
     }
 
     @Override
@@ -58,85 +70,11 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
         ByteBuf in = ((ByteBuf) msg);
 
         while (in.readableBytes() > 0) {
-            if (currentState == State.IDLE) {
-                byte read = in.readByte();
-                if (read == COMMAND_RECEIVE_FILE) {
-                    startTime = System.currentTimeMillis(); //Измерение вермени приема файла
-                    currentState = State.NAME_LENGTH;
-                    receivedFileLength = 0;
-                    System.out.print("COMMAND 1/49: " + read);
-                }
-                else if (read == COMMAND_SEND_FILE) {
-                    currentState = State.FILE_NAME_LENGTH;
-                    receivedFileLength = 0;
-                    System.out.print("COMMAND 3/51: " + read);
-                }
-                else {
-                    System.out.println(" !!! ERROR: Invalid first byte - " + read);
-                    //TODO рубим соединение
-                }
-            }
-            if (currentState == State.NAME_LENGTH) {
-                if (in.readableBytes() >= 1) {
-                    nameLength = in.readByte();
-                    currentState = State.NAME;
-                    System.out.print(" NAME_LENGTH: " + nameLength);
-                }
-            }
-            if (currentState == State.FILE_NAME_LENGTH) {
-                if (in.readableBytes() >= 1) {
-                    nameLength = in.readByte();
-                    currentState = State.FILE_NAME;
-                    System.out.print(" FILE_NAME_LENGTH: " + nameLength);
-                }
-            }
-            if (currentState == State.NAME) {
-                if (in.readableBytes() >= nameLength) {
-                    byte[] fileName = new byte[nameLength];
-                    in.readBytes(fileName);
-                    Path path = consumer.getUserDirectory().resolve(new String(fileName));
-                    out = Files.newOutputStream(path);
-                    currentState = State.FILE_LENGTH;
-                    System.out.print(" NAME: " + new String(fileName, "UTF-8"));
-                }
-            }
-            if (currentState == State.FILE_LENGTH) {
-                if (in.readableBytes() >= 8) {
-                    fileLength = in.readLong();
-                    System.out.println(" FILE_LENGTH: " + fileLength);
-                    currentState = State.FILE;
-                }
-            }
-            if (currentState == State.FILE) {
-                while (in.readableBytes() > 0) {
-                    int size = in.readableBytes();
-                    in.readBytes(out, size);
-                    receivedFileLength += size;
-                    System.out.println(" Принято байтов: " + size + " осталось: " + (fileLength - receivedFileLength));
-                    if (fileLength == receivedFileLength) {
-                        currentState = State.IDLE;
-                        System.out.print(" ++ File received");
-                        out.close();
-                        //TODO передача структуры каталогов клиенту, CallBack из ServerFileController !!!
-                        byte[] userFiles = ServerFileController.getFilesNameList(consumer.getUserDirectory());
-                        CommandServer.sendDirectoryStruct(ctx, userFiles);
-
-                        finishTime = System.currentTimeMillis();
-                        System.out.println("\n время работы=" + (finishTime-startTime) + "ms.");
-                        break;
-                    }
-                }
-            }
-            if (currentState == State.FILE_NAME) {
-                if (in.readableBytes() >= nameLength) {
-                    byte[] fileName = new byte[nameLength];
-                    in.readBytes(fileName);
-                    String file = new String(fileName);
-                    System.out.println(", FILE_NAME: " + file);
-                    CommandServer.sendFileToClient (ctx, consumer, file);
-                    currentState = State.IDLE;
-                }
-            }
+            state.idle(in);
+            state.nameLength(in);
+            state.name(in);
+            state.fileLength(in);
+            state.file(in);
         }
         if (in.readableBytes() == 0) {
             in.release();
@@ -144,13 +82,89 @@ public class FrameHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
+    }
+
+    @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         System.out.println("Client " + ctx.channel().remoteAddress() + " disconnected");
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        ctx.close();
+    public IStateReceive getIdleStateR() {
+        return idleStateR;
+    }
+
+    public IStateReceive getNameLengthStateR() {
+        return nameLenStateR;
+    }
+
+    public IStateReceive getNameStateR() {
+        return nameStateR;
+    }
+
+    public IStateReceive getFileNameStateR() {
+        return fileNameStateR;
+    }
+
+    public IStateReceive getFileStateR() {
+        return fileStateR;
+    }
+
+    public IStateReceive getNameLenStateS() {
+        return nameLenStateS;
+    }
+
+    public IStateReceive getNameStateS() {
+        return nameStateS;
+    }
+
+    public Consumer getConsumer() {
+        return consumer;
+    }
+
+    public OutputStream getOut() {
+        return out;
+    }
+
+    public ChannelHandlerContext getCtx() {
+        return ctx;
+    }
+
+    public int getReceivedFileLength() {
+        return receiveFileLength;
+    }
+
+    public byte getNameLength() {
+        return nameLength;
+    }
+
+    public long getFileLength() {
+        return fileLength;
+    }
+
+    public void setOut(OutputStream out) {
+        this.out = out;
+    }
+
+    public void setState(IStateReceive state) {
+        this.state = state;
+    }
+
+    public void setNameLength(byte nameLength) {
+        this.nameLength = nameLength;
+    }
+
+    public void setFileLength(long fileLength) {
+        this.fileLength = fileLength;
+    }
+
+    public void setReceiveFileLength(int receiveFileLength) {
+        this.receiveFileLength = receiveFileLength;
+    }
+
+    public void addReceivedByte(int receivedFileLength) {
+        this.receiveFileLength += receivedFileLength;
     }
 }

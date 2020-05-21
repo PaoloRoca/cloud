@@ -1,12 +1,13 @@
-package NettyServer.state_receive;
+package NettyServer.state_send;
 
 import NettyServer.FrameHandler;
+import NettyServer.state_receive.IStateReceive;
 import io.netty.buffer.ByteBuf;
 
-public class NameLengthStateR implements IStateReceive {
+public class NameLengthStateS implements IStateReceive {
     private FrameHandler handler;
 
-    public NameLengthStateR(FrameHandler handler) {
+    public NameLengthStateS (FrameHandler handler) {
         this.handler = handler;
     }
 
@@ -17,8 +18,8 @@ public class NameLengthStateR implements IStateReceive {
 //            handler.setNameLength(in.getByte(1));
 
             handler.setNameLength(in.readByte());
-            handler.setState(handler.getNameStateR());
-            System.out.println(" NAME_LENGTH: " + in.getByte(1));
+            handler.setState(handler.getNameStateS());
+            System.out.println(" NAME_LENGTH_S: " + in.getByte(1));
         }
     }
 }

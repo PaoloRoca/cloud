@@ -15,6 +15,7 @@ import javafx.stage.Stage;
  * - Доп.поток на клиенте
  * - Добавить сериализацию
  * - Отработка события: отвалился Сервер
+ * - Убрать кнопку receive (все на одной кнопке Send!)
  */
 public class Main extends Application {
     @Override

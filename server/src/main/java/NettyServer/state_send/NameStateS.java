@@ -1,15 +1,14 @@
-package NettyServer.state_receive;
+package NettyServer.state_send;
 
+import NettyServer.CommandServer;
 import NettyServer.FrameHandler;
+import NettyServer.state_receive.IStateReceive;
 import io.netty.buffer.ByteBuf;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-public class NameStateR implements IStateReceive {
+public class NameStateS implements IStateReceive {
     private FrameHandler handler;
 
-    public NameStateR(FrameHandler handler) {
+    public NameStateS(FrameHandler handler) {
         this.handler = handler;
     }
 
@@ -19,10 +18,10 @@ public class NameStateR implements IStateReceive {
         if (in.readableBytes() >= handler.getNameLength()) {
             byte[] fileName = new byte[handler.getNameLength()];
             in.readBytes(fileName);
-            Path path = handler.getConsumer().getUserDirectory().resolve(new String(fileName));
-            handler.setOut(Files.newOutputStream(path));
-            handler.setState(handler.getFileNameStateR());
-            System.out.println(" NAME: " + new String(fileName));
+            String file = new String(fileName);
+            System.out.println(" FILE_NAME_S: " + file);
+            CommandServer.sendFileToClient (handler.getCtx(), handler.getConsumer(), file);
+            handler.setState(handler.getIdleStateR());
         }
     }
 }

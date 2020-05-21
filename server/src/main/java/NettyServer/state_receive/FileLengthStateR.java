@@ -1,12 +1,13 @@
 package NettyServer.state_receive;
 
+import NettyServer.FrameHandler;
 import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 
 public class FileLengthStateR implements IStateReceive {
-    private FrameHandlerOop handler;
+    private FrameHandler handler;
 
-    public FileLengthStateR(FrameHandlerOop handler) {
+    public FileLengthStateR(FrameHandler handler) {
         this.handler = handler;
     }
 

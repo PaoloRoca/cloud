@@ -1,6 +1,5 @@
 package NettyServer;
 
-import NettyServer.state_receive.FrameHandlerOop;
 import NettyServer.file_controller.ServerFileController;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -50,7 +49,7 @@ public class NettyServer {
                     public void initChannel(SocketChannel ch) throws Exception {
 //                        ch.pipeline().addLast(new ServerInBoundHandler());
 //                        ch.pipeline().addLast(new FrameHandler());
-                        ch.pipeline().addLast(new FrameHandlerOop());
+                        ch.pipeline().addLast(new FrameHandler());
                         ch.pipeline().addLast(new ServerOutBoundHandler());
                     }
             });

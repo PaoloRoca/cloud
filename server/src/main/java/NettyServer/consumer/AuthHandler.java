@@ -1,8 +1,12 @@
-package NettyServer;
+package NettyServer.consumer;
 
+import NettyServer.NettyServer;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+/**
+ * TODO
+ */
 public class AuthHandler extends ChannelInboundHandlerAdapter {
     private boolean authOK = false;
 

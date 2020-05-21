@@ -11,7 +11,7 @@ public interface IStateReceive {
     default void nameLength(ByteBuf in) {
     }
 
-    default void name(ByteBuf in) throws IOException, Exception {
+    default void name(ByteBuf in) throws Exception {
     }
 
     default void fileLength(ByteBuf in) {

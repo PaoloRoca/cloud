@@ -1,6 +1,6 @@
 package garbage;
 
-import NettyServer.Consumer;
+import NettyServer.consumer.Consumer;
 import org.jboss.netty.channel.*;
 
 public class ConsumerHandler extends SimpleChannelUpstreamHandler {

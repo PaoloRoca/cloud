@@ -31,4 +31,18 @@ new ServerBootstrap().group(new EpollEventLoopGroup(1), new EpollEventLoopGroup(
 //        ctx.writeAndFlush(Unpooled.copiedBuffer("123 456",CharsetUtil.UTF_8));
           pipeline.write(Unpooled.copiedBuffer("New msg from Server", CharsetUtil.UTF_8));
 
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          private static long contentLength(Object msg) {
+            if (msg instanceof HttpContent) {
+              return ((HttpContent) msg).content().readableBytes();
+            }
+            if (msg instanceof ByteBuf) {
+              return ((ByteBuf) msg).readableBytes();
+            }
+            if (msg instanceof FileRegion) {
+              return ((FileRegion) msg).count();
+            }
+            throw new IllegalStateException("unexpected message type: " + StringUtil.simpleClassName(msg));
+          }
+
 

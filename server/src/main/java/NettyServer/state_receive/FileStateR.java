@@ -1,15 +1,16 @@
 package NettyServer.state_receive;
 
 import NettyServer.CommandServer;
+import NettyServer.FrameHandler;
 import NettyServer.file_controller.ServerFileController;
 import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 
 public class FileStateR implements IStateReceive{
-    private FrameHandlerOop handler;
+    private FrameHandler handler;
 
-    public FileStateR(FrameHandlerOop handler) {
+    public FileStateR(FrameHandler handler) {
         this.handler = handler;
     }
 
@@ -25,7 +26,7 @@ public class FileStateR implements IStateReceive{
 
             if (handler.getFileLength() == handler.getReceivedFileLength()) {
                 handler.setState(handler.getIdleStateR());
-                System.out.print(" ++ File received");
+                System.out.println(" ++ File received");
                 handler.getOut().close();
                 //TODO доп. поток
                 byte[] userFiles = ServerFileController.getFilesNameList(handler.getConsumer().getUserDirectory());
